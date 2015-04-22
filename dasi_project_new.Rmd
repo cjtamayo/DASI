@@ -1,9 +1,9 @@
 ---
 title: "Confidence in Banks by Class"
 output:
-  pdf_document: default
   html_document:
     theme: cerulean
+  pdf_document: default
 date: "April 20, 2015"
 ---
 
@@ -103,7 +103,7 @@ Expected
 ```
 
 
-Al expected outcomes are greater than 5.
+All expected outcomes are greater than 5.
 
 Now lets test the hypothesis that class and confidence in banking/financial institutions are associated at a 5% significance level.
 
