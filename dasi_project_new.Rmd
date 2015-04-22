@@ -1,0 +1,158 @@
+---
+title: "Confidence in Banks by Class"
+output:
+  pdf_document: default
+  html_document:
+    theme: cerulean
+date: "April 20, 2015"
+---
+
+<!-- For more info on RMarkdown see http://rmarkdown.rstudio.com/ -->
+
+<!-- Enter the code required to load your data in the space below. The data will be loaded but the line of code won't show up in your write up (echo=FALSE) in order to save space-->
+```{r echo=FALSE}
+load(url("http://bit.ly/dasi_gss_data"))
+twothouplus <- gss$class[gss$year > 2000]
+noclasssince <- twothouplus[twothouplus != 'No Class']
+noclasssince <- factor(noclasssince)
+levels(noclasssince) <- c('Lower', 'Working', 'Middle', 'Upper')
+```
+
+<!-- In the remainder of the document, add R code chunks as needed -->
+
+### Introduction:
+
+Turn on any news outlet today, and chances are high that you will hear about the "shrinking middle class" or about income inequality. In 2008, the economy took a nose dive due to realization that the housing sector wasn't quite worth what people had been led to believe. People of all classes were affected by this crisis.
+
+In this midst of all these issues are our banking/financial institutions. They are involved wherever our money is, from holding, investing, lending, and so forth. Upper class individuals likely explore their services more so than lower class customers do. They are often at the forefront of any crisis. 
+Is there a relationship between a person's perceived class and their confidence in the banking/financial institutions? With the majority of people perceiving themselves to be below upper class and our economy dependent on those banking choices, it is important to see how they view this important sector.
+
+### Data:
+
+The data for this project comes from the General Social Survey (GSS), which is a large scale survey taken nearly every year from 1972-1994, and every two years since. Interviewees are English/Spanish speaking individuals over 18 and from metropolitan and rural areas of the United States. Interviews were conducted face-to-face, by telephone, and using computers since 2002. The target sample size has been 1500 each round.
+
+This project will focus on years 2002-2012.
+
+Each is a person surveyed. They will indicate what class they perceive themselves to be (Lower Class, Working Class, Middle Class, and Upper Class) as well as their confidence in the banking/financial institutions (A Great Deal, Only Some, Hardly Any). The variables "class" and "confidence in financial institutions" are both categorical and ordinal.
+
+The study was a survey, so it is observational. While it can find a correlation between variables, it cannot establish causality.
+
+The survey used random samples, however, so its findings can be generalized to the entire US population.
+
+
+### Exploratory data analysis:
+
+Looking at the variable of class (since 2002), the majority of respondents view themselves as "working" or "middle" class, with the numbers of "Lower" and "Upper" being considerably smaller.
+```{r}
+barplot(table(noclasssince), main = 'Class Identification Since 2002')
+```
+
+Similar to the class variable, people's overall confidence in the banking/financial institutions (since 2002) falls near the middle to "Only Some", where the numbers for "Hardly Any" and "A Great Deal" much fewer.
+
+```{r}
+barplot(table(gss$confinan[gss$year > 2001]), main = 'Confidence in Banking/Financial Institutions Since 2002')
+
+```
+
+
+Below is a frequency table and a mosaic plot of the two variables.
+```{r}
+addmargins(table(gss$confinan[gss$year > 2001],noclasssince, deparse.level = 0))
+mosaicplot(table( noclasssince, gss$confinan[gss$year > 2001], deparse.level = 0),  cex.axis = .8, main = 'Confidence in Banking by Class')
+```
+
+While it seems the default, in general, is to be somewhere in the middle in both confidence and class, do they correlate? Are the few people with no confidence in the banking institutions also the few people who consider themselves "Lower Class"? 
+
+### Inference:
+
+The Null Hypothesis in this case is that confidence in banking/financial institutions DO NOT vary by a person's class. In this case, class and confidence level are independent.
+
+The Alternative Hypothesis is that confidence in banking/financial institutions DO vary by a person's class. In this case, class and confidence level are dependent.
+
+Since we are looking to check for independence for two categorical variables, the chi-square test of independence is used. There are three conditions for this test, in regards to independence. First is that random sampling/assignment was used, which is true of the GSS data. Second, is that less than 10% of the population is surveyed, if sampling without replacement. Since the population would be the entire US, this condition is easily met. 
+
+Lets look at what the expected results will be. 
+AGD = A Great Deal
+OS = Only Some
+HA = Hardly Any
+
+Calculating the overall class rates based on the sample:
+```{r}
+#Lower Class
+642 / 7716
+
+#Working Class
+3511 / 7716
+
+#Middle Class
+3308 / 7716
+
+#Upper Class
+255 / 7716
+```
+
+Using these percentages, we find out what the expected outcomes are for response based on class. We do so by creating a new data frame. 
+```{r}
+title <- c('A Great Deal', 'Only Some', 'Hardly Any')
+Lower <- c(.083*1590, .083*4223, .083*1903)
+Working <- c(.455*1590, .455*4223, .455*1903)
+Middle <- c(.429*1590, .429*4223, .429*1903)
+Upper <- c(.033*1590, .033*4223, .033*1903)
+Expected <- data.frame(title, Lower, Working, Middle, Upper)
+Expected
+```
+
+
+Al expected outcomes are greater than 5.
+
+Now lets test the hypothesis that class and confidence in banking/financial institutions are associated at a 5% significance level.
+
+First, we'll calculate the degrees of freedom. Using the formula df = (R - 1) *(C - 1), where R = Rows and C = Columns, we find:
+```{r}
+#df
+(4-1)*(3-1)
+```
+
+Now that we know the degrees of freedom, we can calculate the Chi Squared statistic.
+
+We create 2 vectors. once is based on the observed values and another based on the expected values (rounded to a whole number). Using a loop, we find each value based on the forumula (Observed - Expected)^2 / Expected. We then sum all these values together. Using this value and the degrees of freedom, we then calculate the p-value for the test.
+
+Using this, we do the test.
+
+```{r}
+observed <- c(98,323,221,669,1919,923,742,1846,720,81,135,39)
+expected <- c(132,351,158,723,1921,866,682,1812,816,52,139,63)
+x <- 0
+x_square <- 0
+
+
+for (i in 1:length(observed)){
+
+  x <- (observed[i] - expected[i])^2 / expected[i]
+  x_square <- x_square + x
+}
+
+pchisq(x_square, 6, lower.tail = FALSE)
+```
+
+With a p value of 1.582893e-16 being so small, we reject the null hypothesis in favor of the alternative. This means this test shows convincing evidence that class and confidence in banks are associated.
+
+### Conclusion:
+
+The test seems to show what seemed likely before conducting it. A person's confidence in financial institutions are associated with where they consider themselves among their fellow Americans. However, we cannot imply any inference or causal nature based on these findings. A way to get those kind of results would be to create an experiment. However, since this has to do with how a person perceives their class, this may not be the easiest to design.
+
+### References
+
+General Social Survey(GSS)
+Dataset: http://bit.ly/dasi_gss_data
+Codebook: https://d396qusza40orc.cloudfront.net/statistics%2Fproject%2Fgss1.html
+
+### Appendix
+
+```{r}
+# First 30 observations (NA Removed)
+newtab2 <- data.frame(gss$year[gss$year > 2001], gss$class[gss$year > 2001], gss$confinan[gss$year > 2001])
+colnames(newtab2) <- c('year', 'class', 'confinan')
+head(newtab2[complete.cases(newtab2),], n=50L)
+```
+
