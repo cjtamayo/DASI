@@ -4,6 +4,7 @@ output:
   html_document:
     theme: cerulean
   pdf_document: default
+author: "Christian Tamayo"  
 date: "April 20, 2015"
 ---
 
